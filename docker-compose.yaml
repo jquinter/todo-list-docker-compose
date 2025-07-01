@@ -1,0 +1,99 @@
+# docker-compose.yml
+# This file orchestrates the multi-service ToDo application using Docker.
+# It defines the services (frontend, backend, database, pgadmin), their build
+# contexts, ports, environment variables, dependencies, and volumes.
+
+version: '3.8'
+
+services:
+  # Frontend Service (Vue.js served by Nginx)
+  frontend:
+    build:
+      context: ./frontend # Specifies the build context (where the Dockerfile is)
+      dockerfile: Dockerfile # Specifies the Dockerfile to use
+      args:
+        VUE_APP_API_URL: http://localhost:8080/api # Corrected for Vue CLI
+    ports:
+      - "8080:80" # Map host port 8080 to container port 80 (Nginx)
+    depends_on:
+      backend:
+        condition: service_healthy # Ensure backend is healthy before frontend starts
+    environment:
+      NODE_ENV: production
+
+  # Backend Service (Node.js with Express)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000" # Map host port 3000 to container port 3000 (Node.js)
+    depends_on:
+      database:
+        condition: service_healthy # Ensure database is healthy before backend starts
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: database # This is the service name of the database container
+      DB_PORT: 5432
+    healthcheck: # FIXED: Healthcheck for the backend application using curl
+      #test: ["CMD", "node", "-e", "require('./src/app').listen(3000, () => process.exit(0)).on('error', () => process.exit(1))"]
+      test: ["CMD", "curl", "--fail", "http://localhost:3000/health"] # Use curl to hit the health endpoint
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s # Give the backend app time to start up before checking health
+
+  # Database Service (PostgreSQL)
+  database:
+    image: postgres:15-alpine # Use a specific version for stability
+    ports:
+      - "5432:5432" # Map host port 5432 to container port 5432
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      # Changed to bind mount to a local 'datastore/db_data' folder
+      - ./datastore/db_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql # Initialize database schema
+    healthcheck: # Healthcheck for the PostgreSQL database
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin Service (PostgreSQL Web Interface)
+  pgadmin:
+    image: dpage/pgadmin4:latest # Uses the official pgAdmin 4 image
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "5050:80" # Map host port 5050 to pgAdmin container port 80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_LISTEN_PORT: 80 # Explicitly set for clarity
+    volumes:
+      # Changed to bind mount to a local 'datastore/pgadmin_data' folder
+      - ./datastore/pgadmin_data:/var/lib/pgadmin
+
+  # NEW SERVICE: Dedicated service for running frontend unit tests
+  frontend-tester:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: build-stage # IMPORTANT: This tells Docker to build only up to the 'build-stage'
+      args:
+        VUE_APP_API_URL: http://localhost:8080/api # Still needed for the build process
+    # No ports needed as this service is only for running tests
+    # No depends_on needed as unit tests don't typically require backend/db
+    command: npm run test:unit # The command to run when this container starts
+    volumes:
+      # Mount the frontend source code so tests can run on current code
+      - ./frontend:/app
+      # Ensure node_modules are available from the build context
+      - /app/node_modules # This creates an anonymous volume for node_modules, preventing host node_modules from interfering
+    profiles: ["test"]

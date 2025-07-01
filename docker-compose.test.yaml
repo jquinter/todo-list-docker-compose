@@ -1,0 +1,59 @@
+# docker-compose.test.yml
+# This file defines services specifically for End-to-End (E2E) testing.
+# It overrides parts of docker-compose.yml to use a dedicated test database
+# and sets the backend's NODE_ENV to 'test'.
+
+version: '3.8'
+
+services:
+  # Dedicated Test Database Service
+  test_database:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}_test # Use a distinct database name for testing
+    volumes:
+      - ./datastore/db_data_test:/var/lib/postgresql/data # Separate data volume for test DB
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql # Initialize with same schema
+    healthcheck: # Healthcheck for the PostgreSQL test database
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test-network # This test DB will only be on the test network
+
+  # Override for the Backend Service for E2E Tests
+  # This instance will connect to the 'test_database' and run in 'test' mode.
+  backend: # Overrides the 'backend' service from docker-compose.yml
+    environment:
+      DB_HOST: test_database # Connect to the dedicated test database
+      DB_NAME: ${DB_NAME}_test # Use the test database name
+      NODE_ENV: test # Set Node.js environment to 'test' for clear-data endpoint
+    depends_on:
+      test_database:
+        condition: service_healthy # Ensure test DB is healthy
+    networks:
+      - test-network # This backend instance will only be on the test network
+    # IMPORTANT: Ensure that the main backend (if running) does not conflict on port 3000.
+    # When running tests, you should ideally stop the main stack first.
+    # If you need to run both simultaneously, change the exposed port here (e.g., "3001:3000").
+    # For this setup, we assume you'll run `docker-compose down` first.
+
+  # Override for Frontend Service for E2E Tests
+  # This instance will connect to the backend running in test mode.
+  frontend: # Overrides the 'frontend' service from docker-compose.yml
+    depends_on:
+      backend:
+        condition: service_healthy # Frontend still waits for the backend
+    networks:
+      - test-network # This frontend instance will only be on the test network
+
+
+networks:
+  test-network: # Define a specific network for testing services
+    driver: bridge
+
+volumes:
+  db_data_test: # Docker managed volume for PostgreSQL test data

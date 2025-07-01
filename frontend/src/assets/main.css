@@ -1,0 +1,11 @@
+/* frontend/src/assets/main.css */
+/* This file is used to import Tailwind CSS base styles. */
+
+/* Import Tailwind's base styles, components, and utilities. */
+/* These directives are processed by PostCSS and Tailwind. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* You can add any global custom CSS here if needed,
+   but for this example, Tailwind handles most of the styling. */
