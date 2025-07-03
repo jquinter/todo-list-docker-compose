@@ -3,7 +3,7 @@
 # It overrides parts of docker-compose.yml to use a dedicated test database
 # and sets the backend's NODE_ENV to 'test'.
 
-version: '3.8'
+# version: '3.8'
 
 services:
   # Dedicated Test Database Service

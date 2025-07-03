@@ -3,7 +3,7 @@
 # It defines the services (frontend, backend, database, pgadmin), their build
 # contexts, ports, environment variables, dependencies, and volumes.
 
-version: '3.8'
+# version: '3.8'
 
 services:
   # Frontend Service (Vue.js served by Nginx)
