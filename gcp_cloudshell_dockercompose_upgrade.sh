@@ -3,6 +3,6 @@ sudo curl -L "https://github.com/docker/compose/releases/download/${TV}/docker-c
 sudo chmod +x /usr/local/bin/docker-compose
 echo "Docker Compose has been upgraded to ${TV}"
 
-chmod -R 777 datastore
+sudo chmod -R 777 datastore
 
 cp .env.template .env
