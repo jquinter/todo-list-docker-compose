@@ -1,3 +1,3 @@
 #docker-compose up --build -d
-podman-compose down
-podman-compose up --build -d
+docker-compose down
+docker-compose up --build -d
