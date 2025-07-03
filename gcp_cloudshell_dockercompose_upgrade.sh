@@ -4,3 +4,5 @@ sudo chmod +x /usr/local/bin/docker-compose
 echo "Docker Compose has been upgraded to ${TV}"
 
 chmod -R 777 datastore
+
+cp .env.template .env
