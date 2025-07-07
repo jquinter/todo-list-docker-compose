@@ -66,3 +66,7 @@ substitutions:
   # The Cloud Build service account requires these IAM roles to deploy to Cloud Run
   # and to act as the Cloud Run service identity.
 #  iam: ['roles/run.admin', 'roles/iam.serviceAccountUser']
+
+options:
+  logsBucket: 'gs://scotiabank-2025-scl-101-custom-build-logs' # Replace with your actual bucket name
+serviceAccount: 'projects/scotiabank-2025-scl-101-custom/serviceAccounts/cloud-build-custom-sa@scotiabank-2025-scl-101-custom.iam.gserviceaccount.com' # Replace with your SA
