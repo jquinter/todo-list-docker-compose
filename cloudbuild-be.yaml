@@ -1,0 +1,67 @@
+# /home/jquinter/todo-list-docker-compose/cloudbuild.yaml
+
+# This Cloud Build pipeline is designed to test, build, and publish Docker images
+# for the todo-list application. It is intended to be triggered by a git tag push.
+
+steps:
+  # Step 1: Run Backend Tests
+  # This step executes the backend test script. The 'docker-compose' builder
+  # provides the necessary environment for the script to run.
+  # The build will fail if this script returns a non-zero exit code.
+  - name: 'gcr.io/cloud-builders/docker-compose'
+    id: 'Run Backend Tests'
+    entrypoint: 'bash'
+    args: ['./tests-backend.sh']
+
+  # Step 2: Build the Backend Docker image
+  # This step builds the backend image and tags it with both the specific git tag
+  # from the push ($TAG_NAME) and a generic 'latest' tag.
+  # It waits for both test suites to pass before running.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Backend Image'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/todo-backend:$TAG_NAME'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/todo-backend:latest'
+      - './backend'
+    waitFor: ['Run Backend Tests']
+
+  # Step 3: Deploy Backend Service to Cloud Run
+  # This step uses the image built in Step 1 and deploys it as a Cloud Run service.
+  # Cloud Build implicitly waits for images to be pushed before running subsequent steps.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy Backend'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_BACKEND_SERVICE_NAME}'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/todo-backend:$TAG_NAME'
+      - '--region'
+      - '${_CLOUD_RUN_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated' # Allows public access. For private APIs, use --no-allow-unauthenticated and configure IAM.
+
+# After all build steps succeed, Cloud Build will automatically push the images
+# listed here to Google Container Registry (GCR).
+images:
+  - 'gcr.io/$PROJECT_ID/todo-backend:$TAG_NAME'
+  - 'gcr.io/$PROJECT_ID/todo-backend:latest'
+
+substitutions:
+  # IMPORTANT: You must replace this placeholder with the stable, public URL of your
+  # deployed backend service. You can get this URL after the first successful
+  # deployment of the backend, or by mapping a custom domain.
+  _VUE_APP_API_URL: 'https://todo-backend-service-xxxxxxxx-uc.a.run.app/api'
+  _CLOUD_RUN_REGION: 'us-central1'
+  _BACKEND_SERVICE_NAME: 'todo-backend'
+
+options:
+  timeout: '1200s' # Set a 20-minute timeout for the build.
+  # The Cloud Build service account requires these IAM roles to deploy to Cloud Run
+  # and to act as the Cloud Run service identity.
+  iam: ['roles/run.admin', 'roles/iam.serviceAccountUser']

@@ -1,0 +1,68 @@
+# /home/jquinter/todo-list-docker-compose/cloudbuild.yaml
+
+# This Cloud Build pipeline is designed to test, build, and publish Docker images
+# for the todo-list application. It is intended to be triggered by a git tag push.
+
+steps:
+  # Step 1: Run Frontend Tests
+  # This step executes the frontend test script in parallel with the backend tests.
+  - name: 'gcr.io/cloud-builders/docker-compose'
+    id: 'Run Frontend Tests'
+    entrypoint: 'bash'
+    args: ['./tests-frontend.sh']
+
+  # Step 2: Build the Frontend Docker image
+  # This step builds the production frontend image, passing the production API URL
+  # as a build argument. It is also tagged with the git tag and 'latest'.
+  # It also waits for the tests to complete successfully.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Frontend Image'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'VUE_APP_API_URL=${_VUE_APP_API_URL}'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/todo-frontend:$TAG_NAME'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/todo-frontend:latest'
+      - './frontend'
+    waitFor: ['Run Frontend Tests']
+
+  # Step 4: Deploy Frontend Service to Cloud Run
+  # This step deploys the frontend service, which serves the user interface.
+  # It depends on the backend being available at the URL provided in _VUE_APP_API_URL.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy Frontend'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_FRONTEND_SERVICE_NAME}'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/todo-frontend:$TAG_NAME'
+      - '--region'
+      - '${_CLOUD_RUN_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+# After all build steps succeed, Cloud Build will automatically push the images
+# listed here to Google Container Registry (GCR).
+images:
+  - 'gcr.io/$PROJECT_ID/todo-frontend:$TAG_NAME'
+  - 'gcr.io/$PROJECT_ID/todo-frontend:latest'
+
+# Define substitutions. You must replace the placeholder with your actual production URL.
+substitutions:
+  # IMPORTANT: You must replace this placeholder with the stable, public URL of your
+  # deployed backend service. You can get this URL after the first successful
+  # deployment of the backend, or by mapping a custom domain.
+  _VUE_APP_API_URL: 'https://todo-backend-service-xxxxxxxx-uc.a.run.app/api'
+  _CLOUD_RUN_REGION: 'us-central1'
+  _FRONTEND_SERVICE_NAME: 'todo-frontend'
+
+options:
+  timeout: '1200s' # Set a 20-minute timeout for the build.
+  # The Cloud Build service account requires these IAM roles to deploy to Cloud Run
+  # and to act as the Cloud Run service identity.
+  iam: ['roles/run.admin', 'roles/iam.serviceAccountUser']
