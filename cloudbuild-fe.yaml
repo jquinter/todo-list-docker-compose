@@ -5,11 +5,14 @@
 
 steps:
   # Step 1: Run Frontend Tests
-  # This step executes the frontend test script in parallel with the backend tests.
-  - name: 'gcr.io/cloud-builders/docker-compose'
+  # - name: 'node:18'
+  - name: 'gcr.io/cloud-builders/npm'
+    entrypoint: 'npm'
+    args: ['install']
+  - name: 'gcr.io/cloud-builders/npm'
     id: 'Run Frontend Tests'
-    entrypoint: 'bash'
-    args: ['./tests-frontend.sh']
+    entrypoint: 'npm'
+    args: ['run', 'test:unit']
 
   # Step 2: Build the Frontend Docker image
   # This step builds the production frontend image, passing the production API URL
@@ -61,8 +64,5 @@ substitutions:
   _CLOUD_RUN_REGION: 'us-central1'
   _FRONTEND_SERVICE_NAME: 'todo-frontend'
 
-options:
-  timeout: '1200s' # Set a 20-minute timeout for the build.
-  # The Cloud Build service account requires these IAM roles to deploy to Cloud Run
-  # and to act as the Cloud Run service identity.
-  iam: ['roles/run.admin', 'roles/iam.serviceAccountUser']
+logsBucket: 'gs://scotiabank-2025-scl-101-custom-build-logs' # Replace with your actual bucket name  
+serviceAccount: 'projects/scotiabank-2025-scl-101-custom/serviceAccounts/cloud-build-custom-sa@scotiabank-2025-scl-101-custom.iam.gserviceaccount.com' # Replace with your SA
