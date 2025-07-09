@@ -5,7 +5,7 @@ const todoRoutes = require('./routes/todos');
 const db = require('./db'); // Import the database connection module
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // Middleware setup
 // Enable CORS for all origins. In a production environment, you would restrict this
