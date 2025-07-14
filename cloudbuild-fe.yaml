@@ -5,15 +5,15 @@
 
 steps:
   # Step 1: Run Frontend Tests
-  # - name: 'node:18'
   - name: 'gcr.io/cloud-builders/npm'
-    dir: 'todo-list-docker-compose'
-    entrypoint: 'npm'
-    args: ['install']
+    dir: 'frontend' # Change directory to the frontend application
+    entrypoint: 'bash'
+    args: ['-c', 'npm install && npm cache clean --force'] # Clean cache to avoid issues with subsequent builds
   - name: 'gcr.io/cloud-builders/npm'
     id: 'Run Frontend Tests'
+    dir: 'frontend' # Change directory to the frontend application
     entrypoint: 'npm'
-    args: ['run', 'test:unit']
+    args: ['run', 'test:unit', '--', '--watchAll=false', '--ci', '--coverage'] # Add --ci and --coverage for CI environments
 
   # Step 2: Build the Frontend Docker image
   # This step builds the production frontend image, passing the production API URL
@@ -25,14 +25,30 @@ steps:
       - 'build'
       - '--build-arg'
       - 'VUE_APP_API_URL=${_VUE_APP_API_URL}'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/todo-frontend:$TAG_NAME'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/todo-frontend:latest'
-      - './frontend'
+      - '--build-arg'
+      - 'NGINX_PORT=${_CLOUD_RUN_PORT}'
+      - '--tag'
+      - 'gcr.io/$PROJECT_ID/${_FRONTEND_SERVICE_NAME}:${TAG_NAME}'
+      - '--tag'
+      - 'gcr.io/$PROJECT_ID/${_FRONTEND_SERVICE_NAME}:latest'
+      - 'frontend' # Use 'frontend' as the context path relative to the build root
     waitFor: ['Run Frontend Tests']
 
-  # Step 4: Deploy Frontend Service to Cloud Run
+  # Step 3: Push the Frontend Docker image to GCR
+  # We explicitly push the image with the git tag here so it's available for the deployment step.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Frontend Image'
+    args: ['push', 'gcr.io/$PROJECT_ID/${_FRONTEND_SERVICE_NAME}:$TAG_NAME']
+    waitFor: ['Build Frontend Image']
+
+  # Step 4: Push the 'latest' tag to GCR
+  # Pushing the 'latest' tag is also done explicitly.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Latest Tag'
+    args: ['push', 'gcr.io/$PROJECT_ID/${_FRONTEND_SERVICE_NAME}:latest']
+    waitFor: ['Build Frontend Image']
+
+  # Step 5: Deploy Frontend Service to Cloud Run
   # This step deploys the frontend service, which serves the user interface.
   # It depends on the backend being available at the URL provided in _VUE_APP_API_URL.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -43,18 +59,23 @@ steps:
       - 'deploy'
       - '${_FRONTEND_SERVICE_NAME}'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/todo-frontend:$TAG_NAME'
+      - 'gcr.io/$PROJECT_ID/${_FRONTEND_SERVICE_NAME}:$TAG_NAME'
       - '--region'
       - '${_CLOUD_RUN_REGION}'
+      - '--port'
+      - '${_CLOUD_RUN_PORT}'
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      - '--service-account'
+      - '${_SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com'
 
-# After all build steps succeed, Cloud Build will automatically push the images
-# listed here to Google Container Registry (GCR).
-images:
-  - 'gcr.io/$PROJECT_ID/todo-frontend:$TAG_NAME'
-  - 'gcr.io/$PROJECT_ID/todo-frontend:latest'
+# The 'images' section is no longer needed because we are explicitly pushing
+# the images in the steps above. This makes the pipeline flow clearer and
+# ensures the image is available for the deploy step.
+# images:
+#   - 'gcr.io/$PROJECT_ID/${_FRONTEND_SERVICE_NAME}:$TAG_NAME'
+#   - 'gcr.io/$PROJECT_ID/${_FRONTEND_SERVICE_NAME}:latest'
 
 # Define substitutions. You must replace the placeholder with your actual production URL.
 substitutions:
@@ -62,8 +83,9 @@ substitutions:
   # deployed backend service. You can get this URL after the first successful
   # deployment of the backend, or by mapping a custom domain.
   _VUE_APP_API_URL: 'https://todo-backend-service-xxxxxxxx-uc.a.run.app/api'
-  _CLOUD_RUN_REGION: 'us-central1'
-  _FRONTEND_SERVICE_NAME: 'todo-frontend'
+  _CLOUD_RUN_REGION: 'us-central1' # Default region, can be overridden
+  _FRONTEND_SERVICE_NAME: 'service-name'
+  _CLOUD_RUN_PORT: '8080' # Default port, can be overridden
 
 logsBucket: 'gs://scotiabank-2025-scl-101-custom-build-logs' # Replace with your actual bucket name  
 serviceAccount: 'projects/scotiabank-2025-scl-101-custom/serviceAccounts/cloud-build-custom-sa@scotiabank-2025-scl-101-custom.iam.gserviceaccount.com' # Replace with your SA

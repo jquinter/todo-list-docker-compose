@@ -5,32 +5,49 @@
 
 steps:
   # Step 1: Run Backend Tests
-  # This step executes the backend test script. The 'docker-compose' builder
-  # provides the necessary environment for the script to run.
-  # The build will fail if this script returns a non-zero exit code.
-  - name: 'gcr.io/cloud-builders/docker-compose'
-    id: 'Run Backend Tests'
+  - name: 'gcr.io/cloud-builders/npm'
+    id: 'Install Backend Dependencies'
+    dir: 'backend' # Change directory to the backend application
     entrypoint: 'bash'
-    args: ['./tests-backend.sh']
+    args: ['-c', 'npm install && npm cache clean --force'] # Clean cache to avoid issues with subsequent builds
+  - name: 'gcr.io/cloud-builders/npm'
+    id: 'Run Backend Tests'
+    dir: 'backend' # Change directory to the backend application
+    entrypoint: 'npm'
+    args: ['run', 'test'] # Add --ci and --coverage for CI environments
+    waitFor: ['Install Backend Dependencies']
 
   # Step 2: Build the Backend Docker image
   # This step builds the backend image and tags it with both the specific git tag
   # from the push ($TAG_NAME) and a generic 'latest' tag.
-  # It waits for both test suites to pass before running.
   - name: 'gcr.io/cloud-builders/docker'
     id: 'Build Backend Image'
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/todo-backend:$TAG_NAME'
+      - 'gcr.io/$PROJECT_ID/${_BACKEND_SERVICE_NAME}:$TAG_NAME'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/todo-backend:latest'
-      - './backend'
+      - 'gcr.io/$PROJECT_ID/${_BACKEND_SERVICE_NAME}:latest'
+      - 'backend'
     waitFor: ['Run Backend Tests']
 
-  # Step 3: Deploy Backend Service to Cloud Run
-  # This step uses the image built in Step 1 and deploys it as a Cloud Run service.
-  # Cloud Build implicitly waits for images to be pushed before running subsequent steps.
+  # Step 3: Push the Backend Docker image to GCR
+  # We explicitly push the image with the git tag here so it's available for the deployment step.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Backend Image'
+    args: ['push', 'gcr.io/$PROJECT_ID/${_BACKEND_SERVICE_NAME}:$TAG_NAME']
+    waitFor: ['Build Backend Image']
+
+  # Step 4: Push the 'latest' tag to GCR
+  # Pushing the 'latest' tag is also done explicitly.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Latest Tag'
+    args: ['push', 'gcr.io/$PROJECT_ID/${_BACKEND_SERVICE_NAME}:latest']
+    waitFor: ['Build Backend Image']
+
+  # Step 5: Deploy Backend Service to Cloud Run
+  # This step uses the image pushed in the previous step and deploys it as a Cloud Run service.
+  # It waits for the specific tag to be pushed before running.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'Deploy Backend'
     entrypoint: gcloud
@@ -39,29 +56,42 @@ steps:
       - 'deploy'
       - '${_BACKEND_SERVICE_NAME}'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/todo-backend:$TAG_NAME'
+      - 'gcr.io/$PROJECT_ID/${_BACKEND_SERVICE_NAME}:$TAG_NAME' # Use the specific tag for deployment
       - '--region'
       - '${_CLOUD_RUN_REGION}'
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated' # Allows public access. For private APIs, use --no-allow-unauthenticated and configure IAM.
+      - '--service-account'
+      - '${_SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com'
+      # Add Cloud SQL connection. The connection name is the instance connection string.
+      - '--add-cloudsql-instances=${_CLOUD_SQL_CONNECTION_NAME}'
+      # Set environment variables for the database connection.
+      # The DB_HOST is set to the Unix socket path provided by the Cloud SQL proxy.
+      - '--set-env-vars=DB_USER=${_DB_USER},DB_NAME=${_DB_NAME},DB_HOST=/cloudsql/${_CLOUD_SQL_CONNECTION_NAME}'
+      # Mount the database password from Secret Manager. This is the recommended practice.
+      - '--update-secrets=DB_PASSWORD=${_DB_PASSWORD_SECRET}:latest'
+    waitFor: ['Push Backend Image']
 
-# After all build steps succeed, Cloud Build will automatically push the images
-# listed here to Google Container Registry (GCR).
-images:
-  - 'gcr.io/$PROJECT_ID/todo-backend:$TAG_NAME'
-  - 'gcr.io/$PROJECT_ID/todo-backend:latest'
+# The 'images' section is no longer needed because we are explicitly pushing
+# the images in the steps above. This makes the pipeline flow clearer and
+# ensures the image is available for the deploy step.
+# images:
+#   - 'gcr.io/$PROJECT_ID/${_BACKEND_SERVICE_NAME}:$TAG_NAME'
+#   - 'gcr.io/$PROJECT_ID/${_BACKEND_SERVICE_NAME}:latest'
 
 substitutions:
-  # IMPORTANT: You must replace this placeholder with the stable, public URL of your
-  # deployed backend service. You can get this URL after the first successful
-  # deployment of the backend, or by mapping a custom domain.
-  _VUE_APP_API_URL: 'https://todo-backend-service-xxxxxxxx-uc.a.run.app/api'
   _CLOUD_RUN_REGION: 'us-central1'
-  _BACKEND_SERVICE_NAME: 'todo-backend'
+  _BACKEND_SERVICE_NAME: 'service-name'
+  # --- Add substitutions for Cloud SQL ---
+  # IMPORTANT: Replace these placeholders with your actual configuration.
+  # You can find the instance connection name on the Cloud SQL instance's overview page.
+  _CLOUD_SQL_CONNECTION_NAME: 'your-project-id:your-region:your-instance-id'
+  _DB_USER: 'your-db-user'
+  _DB_NAME: 'your-db-name'
+  # This is the name of the secret in Secret Manager that holds your DB password.
+  _DB_PASSWORD_SECRET: 'todo-db-password'
 
-options:
-  timeout: '1200s' # Set a 20-minute timeout for the build.
-  # The Cloud Build service account requires these IAM roles to deploy to Cloud Run
-  # and to act as the Cloud Run service identity.
-  iam: ['roles/run.admin', 'roles/iam.serviceAccountUser']
+timeout: 500s
+logsBucket: 'gs://${PROJECT_ID}-build-logs' # Replace with your actual bucket name  
+serviceAccount: 'projects/${PROJECT_ID}/serviceAccounts/${_SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com' # Replace with your SA
