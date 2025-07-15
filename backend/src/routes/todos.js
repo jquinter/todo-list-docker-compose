@@ -7,7 +7,7 @@ const db = require('../db'); // Import the database module
 // Retrieves all todo items from the database, ordered by ID.
 router.get('/', async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM todos ORDER BY id ASC');
+    const result = await db.query("SELECT id, CONCAT('[NUBE] ', title) as title, completed FROM todos ORDER BY id ASC");
     res.json(result.rows); // Send the rows as a JSON array
   } catch (err) {
     console.error('Error fetching todos:', err);
