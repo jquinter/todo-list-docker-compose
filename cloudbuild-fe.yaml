@@ -88,4 +88,5 @@ substitutions:
   _CLOUD_RUN_PORT: '8080' # Default port, can be overridden
 
 logsBucket: 'gs://scotiabank-2025-scl-101-custom-build-logs' # Replace with your actual bucket name  
-serviceAccount: 'projects/scotiabank-2025-scl-101-custom/serviceAccounts/cloud-build-custom-sa@scotiabank-2025-scl-101-custom.iam.gserviceaccount.com' # Replace with your SA
+#serviceAccount: 'projects/scotiabank-2025-scl-101-custom/serviceAccounts/cloud-build-custom-sa@scotiabank-2025-scl-101-custom.iam.gserviceaccount.com' # Replace with your SA
+serviceAccount: 'projects/${PROJECT_ID}/serviceAccounts/${_SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com' # Replace with your SA

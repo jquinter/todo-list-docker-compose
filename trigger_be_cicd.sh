@@ -1,6 +1,7 @@
+
 SUBSTITUTIONS=$(
 cat <<EOL
-TAG_NAME=v0.0.1,
+TAG_NAME=be-v$(date +%Y%m%d-%H%M%S),
 _BACKEND_SERVICE_NAME=todo-backend,
 _CLOUD_SQL_CONNECTION_NAME=scotiabank-2025-scl-101-custom:us-central1:todo-db-sandbox-instance,
 _DB_USER=admin,
