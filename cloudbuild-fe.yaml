@@ -86,6 +86,7 @@ substitutions:
   _CLOUD_RUN_REGION: 'us-central1' # Default region, can be overridden
   _FRONTEND_SERVICE_NAME: 'service-name'
   _CLOUD_RUN_PORT: '8080' # Default port, can be overridden
+  _SERVICE_ACCOUNT_NAME: 'cloud-build-custom-sa'
 
 logsBucket: 'gs://scotiabank-2025-scl-101-custom-build-logs' # Replace with your actual bucket name  
 #serviceAccount: 'projects/scotiabank-2025-scl-101-custom/serviceAccounts/cloud-build-custom-sa@scotiabank-2025-scl-101-custom.iam.gserviceaccount.com' # Replace with your SA

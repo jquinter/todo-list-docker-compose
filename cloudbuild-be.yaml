@@ -91,6 +91,7 @@ substitutions:
   _DB_NAME: 'your-db-name'
   # This is the name of the secret in Secret Manager that holds your DB password.
   _DB_PASSWORD_SECRET: 'todo-db-password'
+  _SERVICE_ACCOUNT_NAME: 'cloud-build-custom-sa'
 
 timeout: 500s
 logsBucket: 'gs://${PROJECT_ID}-build-logs' # Replace with your actual bucket name  
