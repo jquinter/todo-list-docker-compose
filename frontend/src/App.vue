@@ -1,7 +1,7 @@
 <template>
   <div id="app_container" class="container mx-auto p-4 bg-gray-100 min-h-screen flex flex-col items-center justify-center">
     <div class="bg-white shadow-xl rounded-lg p-8 w-full max-w-md">
-      <h1 class="text-4xl font-extrabold mb-8 text-center text-gray-800">The ToDo List</h1>
+      <h1 class="text-4xl font-extrabold mb-8 text-center text-green-500">La TREMENDA lista</h1>
 
       <!-- Input and Add Button Section -->
       <div class="flex mb-6 space-x-2">
