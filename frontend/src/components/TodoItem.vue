@@ -7,6 +7,7 @@
       <!-- Checkbox for toggling completion status -->
       <input
         type="checkbox"
+        :aria-checked="todo.completed"
         :checked="todo.completed"
         @change="$emit('toggle-complete', todo.id)"
         class="form-checkbox h-6 w-6 text-blue-600 rounded-full border-gray-300 focus:ring-blue-500 cursor-pointer"
