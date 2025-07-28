@@ -66,3 +66,5 @@ Easily start your REST Web Services
 # All available configurations
 
 Read about them [here] (https://quarkus.io/guides/all-config)
+
+https://quarkus.io/guides/config-yaml
