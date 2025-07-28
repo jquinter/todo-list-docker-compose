@@ -27,14 +27,31 @@ RUN npm run build
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine as production-stage
 
+# This environment variable will be used by Nginx to proxy requests to the backend.
+# It can be overridden at runtime, e.g., with `docker run -e BACKEND_URL=...`
+ARG VUE_APP_API_URL
+ENV BACKEND_URL=$VUE_APP_API_URL
+
+ARG NGINX_PORT
+ENV NGINX_PORT=$NGINX_PORT
+
+# Install gettext package which provides the `envsubst` utility.
+RUN apk add --no-cache gettext
+
 # Copy the built Vue.js application from the build-stage to Nginx's web root
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-# Copy the custom Nginx configuration file
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+# Copy the Nginx configuration template. `envsubst` will process this file.
+COPY ./nginx.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Expose port 80, which Nginx will listen on
-EXPOSE 80
+# Expose port, which Nginx will listen on
+EXPOSE $NGINX_PORT
 
-# Command to run Nginx in the foreground
-CMD ["nginx", "-g", "daemon off;"]
+# Copy your custom entrypoint script
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+
+# Make the entrypoint script executable
+RUN chmod +x /docker-entrypoint.sh
+
+# Set the custom entrypoint
+ENTRYPOINT ["/docker-entrypoint.sh"]

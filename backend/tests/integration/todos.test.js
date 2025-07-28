@@ -42,7 +42,7 @@ describe('Todo API Integration Tests', () => {
         { id: 2, title: 'Test Todo 2', completed: true }
       ]);
       // Verify that the correct SQL query was executed
-      expect(db.query).toHaveBeenCalledWith('SELECT * FROM todos ORDER BY id ASC');
+      expect(db.query).toHaveBeenCalledWith("SELECT id, CONCAT('[NUBE] ', title) as title, completed FROM todos ORDER BY id ASC");
     });
 
     it('should return 500 on database error', async () => {
