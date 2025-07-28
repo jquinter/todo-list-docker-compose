@@ -80,6 +80,26 @@ services:
       # Changed to bind mount to a local 'datastore/pgadmin_data' folder
       - ./datastore/pgadmin_data:/var/lib/pgadmin
 
+  # NEW SERVICE: Quarkus Java Service
+  quarkus:
+    image: maven:3.9.11-ibm-semeru-21-noble
+    working_dir: /usr/src/mymaven/todo-service
+    command: ./mvnw quarkus:dev -ntp
+    volumes:
+      - ./java-service:/usr/src/mymaven
+      # Persist maven dependencies to speed up subsequent builds
+      - ./datastore/m2_repo:/root/.m2
+    ports:
+      - "8082:8082" # Quarkus HTTP port
+      - "8083:8083" # Port from original script
+      - "9000:9000" # Quarkus Dev UI
+    depends_on:
+      backend:
+        condition: service_healthy
+    # Keep stdin open for live reload
+    stdin_open: true
+    tty: true
+
   # NEW SERVICE: Dedicated service for running frontend unit tests
   frontend-tester:
     build:
