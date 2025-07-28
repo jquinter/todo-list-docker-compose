@@ -1,7 +1,7 @@
 MVN_TARGETVERSION="maven:3.9.11-ibm-semeru-21-noble"
 COMMAND=$(
 cat <<EOL
-./mvnw test -ntp
+./mvnw clean test -ntp
 EOL
 )
 
