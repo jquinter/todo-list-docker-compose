@@ -23,7 +23,8 @@ RUN npm install
 COPY . .
 
 # Expose the port the Node.js application listens on
-EXPOSE 3000
-
+ARG BACKEND_PORT
+ENV BACKEND_PORT=$BACKEND_PORT
+EXPOSE $BACKEND_PORT
 # Define the command to run the application when the container starts
 CMD ["node", "src/app.js"]
