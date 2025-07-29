@@ -8,4 +8,5 @@ else
     echo "Detected Linux/other OS, using docker-compose."
 fi
 
-${COMPOSE_COMMAND} --profile test run --rm frontend-tester
+${COMPOSE_COMMAND} down
+${COMPOSE_COMMAND} up --build -d
