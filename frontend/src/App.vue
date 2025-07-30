@@ -53,6 +53,10 @@ export default {
       newTodoText: '',
       // FIXED: Use process.env.VUE_APP_API_URL for Vue CLI projects
       backendUrl: process.env.VUE_APP_API_URL || '/api',
+      // Simulate a logged-in user. In a real app, this would come from an auth service.
+      currentUser: {
+        id: 1, // Corresponds to 'jdoe' in our init.sql
+      },
     };
   },
   // Lifecycle hook: called after the instance is created.
@@ -66,7 +70,8 @@ export default {
      */
     async fetchTodos() {
       try {
-        const response = await fetch(`${this.backendUrl}/todos`);
+        // Fetch todos for the current user
+        const response = await fetch(`${this.backendUrl}/users/${this.currentUser.id}/todos`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -93,7 +98,7 @@ export default {
       };
 
       try {
-        const response = await fetch(`${this.backendUrl}/todos`, {
+        const response = await fetch(`${this.backendUrl}/users/${this.currentUser.id}/todos`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -132,7 +137,7 @@ export default {
       todoToUpdate.completed = !todoToUpdate.completed;
 
       try {
-        const response = await fetch(`${this.backendUrl}/todos/${id}`, {
+        const response = await fetch(`${this.backendUrl}/users/${this.currentUser.id}/todos/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -160,7 +165,7 @@ export default {
      */
     async deleteTodo(id) {
       try {
-        const response = await fetch(`${this.backendUrl}/todos/${id}`, {
+        const response = await fetch(`${this.backendUrl}/users/${this.currentUser.id}/todos/${id}`, {
           method: 'DELETE',
         });
 

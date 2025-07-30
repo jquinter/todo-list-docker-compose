@@ -1,25 +1,35 @@
-// src/main/java/org/acme/todo/TodoItem.java
 package org.acme.todo;
 
-import java.util.Objects;
+import java.time.OffsetDateTime;
 
-/**
- * Represents a single Todo item.
- */
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 public class TodoItem {
+
     private String id;
     private String title;
     private boolean completed;
+    private Integer userId; // To link with the user
 
-    // Default constructor for JSON deserialization
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+    private OffsetDateTime createdAt;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+    private OffsetDateTime completedAt;
+
     public TodoItem() {
     }
 
-    public TodoItem(String id, String title, boolean completed) {
+    public TodoItem(String id, String title, boolean completed, Integer userId, OffsetDateTime createdAt, OffsetDateTime completedAt) {
         this.id = id;
         this.title = title;
         this.completed = completed;
+        this.userId = userId;
+        this.createdAt = createdAt;
+        this.completedAt = completedAt;
     }
+
+    // Getters and Setters
 
     public String getId() {
         return id;
@@ -45,27 +55,27 @@ public class TodoItem {
         this.completed = completed;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        TodoItem todoItem = (TodoItem) o;
-        return completed == todoItem.completed &&
-               Objects.equals(id, todoItem.id) &&
-               Objects.equals(title, todoItem.title);
+    public Integer getUserId() {
+        return userId;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, title, completed);
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
 
-    @Override
-    public String toString() {
-        return "TodoItem{" +
-               "id='" + id + '\'' +
-               ", title='" + title + '\'' +
-               ", completed=" + completed +
-               '}';
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public OffsetDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(OffsetDateTime completedAt) {
+        this.completedAt = completedAt;
     }
 }

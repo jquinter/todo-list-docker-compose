@@ -27,27 +27,28 @@ public class TodoService {
     TodoClient todoClient;
 
     /**
-     * Retrieves all todo items from the external API.
+     * Retrieves all todo items for a specific user from the external API.
+     * @param userId The ID of the user.
      * @return A list of TodoItem objects.
      */
-    public List<TodoItem> findAllTodos() {
-        return todoClient.getAllTodos();
+    public List<TodoItem> findAllTodosByUser(String userId) {
+        // Assumes TodoClient is updated to call something like: GET /users/{userId}/todos
+        return todoClient.getTodosByUserId(userId);
     }
 
     /**
-     * Retrieves a single todo item by its ID.
-     * @param id The ID of the todo item.
+     * Retrieves a single todo item by its ID for a specific user.
+     * @param userId The ID of the user.
+     * @param todoId The ID of the todo item.
      * @return The TodoItem object.
      * @throws NotFoundException if the todo item with the given ID is not found.
      */
-    public TodoItem findTodoById(String id) {
-        // The client might throw a WebApplicationException (e.g., 404) if not found.
-        // We can re-throw it or wrap it in a more specific exception if needed.
+    public TodoItem findTodoById(String userId, String todoId) {
         try {
-            return todoClient.getTodoById(id);
+            return todoClient.getTodoById(userId, todoId);
         } catch (jakarta.ws.rs.WebApplicationException e) {
             if (e.getResponse().getStatus() == 404) {
-                throw new NotFoundException("Todo item with ID " + id + " not found.");
+                throw new NotFoundException("Todo item with ID " + todoId + " not found for user " + userId);
             }
             throw e; // Re-throw other exceptions
         }
@@ -55,36 +56,38 @@ public class TodoService {
 
     /**
      * Creates a new todo item.
-     * Assigns a new ID if not provided by the client, then sends it to the external API.
+     * Assigns a new ID if not provided, then sends it to the external API for a specific user.
+     * @param userId The ID of the user creating the todo.
      * @param todoItem The TodoItem object to create.
      * @return The created TodoItem object.
      */
-    public TodoItem createTodo(TodoItem todoItem) {
+    public TodoItem createTodo(String userId, TodoItem todoItem) {
         if (todoItem.getId() == null || todoItem.getId().isEmpty()) {
             todoItem.setId(UUID.randomUUID().toString()); // Assign a unique ID if not provided
         }
-        return todoClient.createTodo(todoItem);
+        return todoClient.createTodo(userId, todoItem);
     }
 
     /**
      * Updates an existing todo item.
-     * @param id The ID of the todo item to update.
+     * @param userId The ID of the user.
+     * @param todoId The ID of the todo item to update.
      * @param todoItem The updated TodoItem object.
      * @return The updated TodoItem object.
      * @throws NotFoundException if the todo item with the given ID is not found.
      */
-    public TodoItem updateTodo(String id, TodoItem todoItem) {
+    public TodoItem updateTodo(String userId, String todoId, TodoItem todoItem) {
         // Ensure the ID in the path matches the ID in the body for consistency
-        if (!id.equals(todoItem.getId())) {
+        if (!todoId.equals(todoItem.getId())) {
             // Depending on business logic, you might throw an IllegalArgumentException here
             // or simply use the path ID. For this example, we'll ensure they match.
-            todoItem.setId(id);
+            todoItem.setId(todoId);
         }
         try {
-            return todoClient.updateTodo(id, todoItem);
+            return todoClient.updateTodo(userId, todoId, todoItem);
         } catch (jakarta.ws.rs.WebApplicationException e) {
             if (e.getResponse().getStatus() == 404) {
-                throw new NotFoundException("Todo item with ID " + id + " not found for update.");
+                throw new NotFoundException("Todo item with ID " + todoId + " not found for update.");
             }
             throw e;
         }
@@ -92,26 +95,28 @@ public class TodoService {
 
     /**
      * Deletes a todo item by its ID.
-     * @param id The ID of the todo item to delete.
+     * @param userId The ID of the user.
+     * @param todoId The ID of the todo item to delete.
      * @throws NotFoundException if the todo item with the given ID is not found.
      */
-    public void deleteTodo(String id) {
+    public void deleteTodo(String userId, String todoId) {
         try {
-            todoClient.deleteTodo(id);
+            todoClient.deleteTodo(userId, todoId);
         } catch (jakarta.ws.rs.WebApplicationException e) {
             if (e.getResponse().getStatus() == 404) {
-                throw new NotFoundException("Todo item with ID " + id + " not found for deletion.");
+                throw new NotFoundException("Todo item with ID " + todoId + " not found for deletion.");
             }
             throw e;
         }
     }
 
     /**
-     * Generates insights from the list of all todo items.
+     * Generates insights from the list of all todo items for a specific user.
+     * @param userId The ID of the user.
      * @return A TodoInsights object containing statistics.
      */
-    public TodoInsights getInsights() {
-        List<TodoItem> allTodos = findAllTodos();
+    public TodoInsights getInsights(String userId) {
+        List<TodoItem> allTodos = findAllTodosByUser(userId);
 
         if (allTodos == null || allTodos.isEmpty()) {
             return new TodoInsights(0, 0, 0.0, Collections.emptyMap());
