@@ -27,7 +27,7 @@ import static org.mockito.ArgumentMatchers.eq;
 @QuarkusTest
 public class TodoServiceTest {
 
-    @Inject
+    @InjectMock
     TodoService todoService; // The service we are testing
 
     @InjectMock
@@ -47,7 +47,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    void testFindAllTodos() {
+    void UnitTestFindAllTodos() {
         // Configure mock behavior for todoClient.getAllTodos()
         List<TodoItem> mockTodos = Arrays.asList(todo1, todo2);
         Mockito.when(todoClient.getAllTodos()).thenReturn(mockTodos);
@@ -66,7 +66,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    void testFindTodoByIdFound() {
+    void UnitTestFindTodoByIdFound() {
         Mockito.when(todoClient.getTodoById("1")).thenReturn(todo1);
 
         TodoItem result = todoService.findTodoById("1");
@@ -77,7 +77,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    void testFindTodoByIdNotFound() {
+    void UnitTestFindTodoByIdNotFound() {
         // Simulate a 404 response from the client
         WebApplicationException notFoundException = new WebApplicationException(Response.Status.NOT_FOUND);
         Mockito.when(todoClient.getTodoById("99")).thenThrow(notFoundException);
@@ -92,7 +92,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    void testCreateTodoWithNewId() {
+    void UnitTestCreateTodoWithNewId() {
         TodoItem newTodo = new TodoItem(null, "New Task", false);
         TodoItem createdTodoResponse = new TodoItem("generated-id", "New Task", false);
 
@@ -111,7 +111,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    void testCreateTodoWithProvidedId() {
+    void UnitTestCreateTodoWithProvidedId() {
         TodoItem newTodo = new TodoItem("custom-id", "Custom Task", false);
         TodoItem createdTodoResponse = new TodoItem("custom-id", "Custom Task", false);
 
@@ -127,7 +127,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    void testUpdateTodo() {
+    void UnitTestUpdateTodo() {
         TodoItem updatedTodoRequest = new TodoItem("1", "Buy groceries (updated)", true);
         TodoItem updatedTodoResponse = new TodoItem("1", "Buy groceries (updated)", true);
 
@@ -144,7 +144,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    void testUpdateTodoNotFound() {
+    void UnitTestUpdateTodoNotFound() {
         WebApplicationException notFoundException = new WebApplicationException(Response.Status.NOT_FOUND);
         Mockito.when(todoClient.updateTodo(eq("99"), any(TodoItem.class))).thenThrow(notFoundException);
 
@@ -159,7 +159,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    void testDeleteTodo() {
+    void UnitTestDeleteTodo() {
         Mockito.doNothing().when(todoClient).deleteTodo("1");
 
         assertDoesNotThrow(() -> todoService.deleteTodo("1"));
@@ -168,7 +168,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    void testDeleteTodoNotFound() {
+    void UnitTestDeleteTodoNotFound() {
         WebApplicationException notFoundException = new WebApplicationException(Response.Status.NOT_FOUND);
         Mockito.doThrow(notFoundException).when(todoClient).deleteTodo("99");
 
@@ -181,7 +181,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    void testGetInsights() {
+    void UnitTestGetInsights() {
         // Arrange
         List<TodoItem> mockTodos = Arrays.asList(
             new TodoItem("1", "Walk the dog", true),

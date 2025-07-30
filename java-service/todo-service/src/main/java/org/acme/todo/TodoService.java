@@ -32,6 +32,7 @@ public class TodoService {
      */
     public List<TodoItem> findAllTodos() {
         return todoClient.getAllTodos();
+        // return Arrays.asList(new TodoItem("1", "Hardcoded Debug", false));
     }
 
     /**

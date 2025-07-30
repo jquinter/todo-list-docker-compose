@@ -44,6 +44,14 @@ services:
   # Override for Frontend Service for E2E Tests
   # This instance will connect to the backend running in test mode.
   frontend: # Overrides the 'frontend' service from docker-compose.yml
+    build:
+      context: ./frontend # Specifies the build context (where the Dockerfile is)
+      dockerfile: Dockerfile # Specifies the Dockerfile to use
+      args:
+        NGINX_PORT: 80
+        VUE_APP_API_URL: http://localhost:3001 # Corrected for Vue CLI
+    ports:
+      - "8080:80" # Map host port 8080 to container port 80 (Nginx)
     depends_on:
       backend:
         condition: service_healthy # Frontend still waits for the backend

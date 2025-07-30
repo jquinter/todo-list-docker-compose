@@ -33,7 +33,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /todos
-// Creates a new todo item.
+// Creates a new todo item
 router.post('/', async (req, res) => {
   const { title, completed } = req.body; // Extract title and completed status from request body
   if (!title || typeof title !== 'string' || title.trim() === '') {

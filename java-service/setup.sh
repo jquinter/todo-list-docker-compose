@@ -42,6 +42,15 @@ while [[ "$#" -gt 0 ]]; do
                 exit 1
             fi
             ;;
+        --clean-install)
+            if [[ -n "$2" && "$2" != --* ]]; then
+                CLEANINSTALL="$2"
+                shift
+            else
+                echo "Error: --clean-install requires a value."
+                exit 1
+            fi
+            ;;            
         *)
             # Unknown option
             echo "Unknown parameter passed: $1"
@@ -64,12 +73,12 @@ if [[ -n "$BASE" ]]; then
     echo "Processing base: $BASE"
     # Add your logic here that uses the $BASE variable
     MVN_TARGETVERSION="maven:3.9.11-ibm-semeru-21-noble"
-    COMMAND="mvn clean install"
+    COMMAND="mvn -ntp clean install"
 
     # BASE INSTALL
     COMMAND=$(
     cat <<EOL
-mvn io.quarkus.platform:quarkus-maven-plugin:3.24.5:create \
+mvn -ntp io.quarkus.platform:quarkus-maven-plugin:3.24.5:create \
     -DprojectGroupId=org.acme \
     -DprojectArtifactId=todo-service
 EOL
@@ -88,7 +97,7 @@ if [[ -n "$EXTENSIONS" ]]; then
 
     COMMAND=$(
     cat <<EOL
-./mvnw quarkus:add-extension -Dextensions=${EXTENSIONS}
+./mvnw -ntp quarkus:add-extension -Dextensions=${EXTENSIONS}
 EOL
 )
 
@@ -99,9 +108,28 @@ EOL
     
 fi
 
+if [[ -n "$CLEANINSTALL" ]]; then
+    echo "Processing CLEANINSTALL: $CLEANINSTALL"
+    # Add your logic here that uses the $CLEANINSTALL variable
+    MVN_TARGETVERSION="maven:3.9.11-ibm-semeru-21-noble"    
+    COMMAND="mvn -ntp clean install"
+
+    podman run -it --rm \
+        -v "$(pwd)":/usr/src/mymaven \
+        -w /usr/src/mymaven/todo-service ${MVN_TARGETVERSION} \
+        ${COMMAND}          
+fi
+
 if [[ -n "$MISC" ]]; then
     echo "Processing miscellaneous: $MISC"
     # Add your logic here that uses the $MISC variable
+    MVN_TARGETVERSION="maven:3.9.11-ibm-semeru-21-noble"    
+    COMMAND="mvn -ntp $MISC"
+
+    podman run -it --rm \
+        -v "$(pwd)":/usr/src/mymaven \
+        -w /usr/src/mymaven/todo-service ${MVN_TARGETVERSION} \
+        ${COMMAND}    
 fi
 
 echo "Script finished."

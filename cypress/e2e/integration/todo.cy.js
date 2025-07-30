@@ -4,12 +4,13 @@ describe('ToDo Application E2E Tests', () => {
   beforeEach(() => {
     // Make a POST request to the backend's test data clearing endpoint
     // Ensure your backend is running in 'test' environment and exposes this endpoint
-    cy.request('POST', 'http://localhost:3000/todos/clear-data');
+    cy.request('POST', 'http://localhost:3001/todos/clear-data');
     cy.visit('http://localhost:8080'); // Visit the frontend after clearing data
+    cy.wait(1000); // Wait for the app to load
   });
 
-  it('should display the title "The ToDo List"', () => {
-    cy.get('h1').should('contain', 'The ToDo List');
+  it('should display the title "La TREMENDA lista"', () => {
+    cy.get('h1').should('contain', 'La TREMENDA lista');
   });
 
   it('should add a new todo item and verify its presence in the UI and Backend/DB', () => {
@@ -24,7 +25,7 @@ describe('ToDo Application E2E Tests', () => {
     cy.get('ul li span').should('contain', todoText);
 
     // Backend/DB Assertion: Verify the todo exists via the backend API
-    cy.request('GET', 'http://localhost:3000/todos').then((response) => {
+    cy.request('GET', 'http://localhost:3001/todos').then((response) => {
       expect(response.status).to.eq(200);
       // Find the newly added todo in the API response
       const addedTodo = response.body.find(todo => todo.title === todoText);
@@ -51,7 +52,7 @@ describe('ToDo Application E2E Tests', () => {
       .should('have.class', 'line-through');
 
     // Backend/DB Assertion: Verify the todo's status via the backend API
-    cy.request('GET', 'http://localhost:3000/todos').then((response) => {
+    cy.request('GET', 'http://localhost:3001/todos').then((response) => {
       expect(response.status).to.eq(200);
       const updatedTodo = response.body.find(todo => todo.title === todoText);
       expect(updatedTodo).to.exist;
@@ -77,7 +78,7 @@ describe('ToDo Application E2E Tests', () => {
     cy.contains('p', 'No todos yet. Start by adding one above!').should('be.visible');
 
     // Backend/DB Assertion: Verify the todo is absent via the backend API
-    cy.request('GET', 'http://localhost:3000/todos').then((response) => {
+    cy.request('GET', 'http://localhost:3001/todos').then((response) => {
       expect(response.status).to.eq(200);
       const deletedTodo = response.body.find(todo => todo.title === todoText);
       expect(deletedTodo).to.not.exist; // Should no longer be present
