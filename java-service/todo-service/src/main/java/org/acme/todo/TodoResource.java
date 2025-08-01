@@ -34,10 +34,10 @@ public class TodoResource {
      * @return A list of TodoItem objects.
      */
     @GET
-    public List<TodoItem> getAllTodos() {
-        return todoService.findAllTodos();
+    public List<TodoItem> getAll(@HeaderParam("X-Goog-Authenticated-User-Email") String userEmail) {
+        // The service now uses the email to find the user's todos
+        return todoService.findAllTodos(userEmail);
     }
-
     /**
      * Retrieves insights about the todo list.
      * GET /todos/insights
@@ -73,7 +73,7 @@ public class TodoResource {
      * @return A Response with status 201 Created and the location of the new resource.
      */
     @POST
-    public Response createTodo(TodoItem todoItem) {
+    public Response createTodo(TodoItem todoItem, @HeaderParam("X-Goog-Authenticated-User-Email") String userEmail) {
         TodoItem createdTodo = todoService.createTodo(todoItem);
         // Return 201 Created with the location header
         return Response.created(URI.create("/todos/" + createdTodo.getId()))

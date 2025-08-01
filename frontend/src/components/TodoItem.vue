@@ -55,10 +55,11 @@ export default {
       type: Object,
       required: true,
       validator: (value) => {
-        // Basic validation for the todo object structure
-        return typeof value.id === 'number' &&
+        // The ID can be a number (from DB) or string (from optimistic UI updates)
+        return (typeof value.id === 'number' || typeof value.id === 'string') &&
                typeof value.title === 'string' &&
-               typeof value.completed === 'boolean';
+               typeof value.completed === 'boolean' &&
+               'created_at' in value; // Check for presence of createdAt
       },
     },
   },

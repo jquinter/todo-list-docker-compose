@@ -8,5 +8,5 @@ else
     echo "Detected Linux/other OS, using docker-compose."
 fi
 
-${COMPOSE_COMMAND} down
-${COMPOSE_COMMAND} up --build -d
+${COMPOSE_COMMAND} --profile dev down
+${COMPOSE_COMMAND} --profile dev up --build -d

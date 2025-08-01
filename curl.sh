@@ -1,0 +1,16 @@
+curl 'https://todoapp.scotia2025.jqpro.dev/api/todos' \
+  -H 'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7' \
+  -H 'accept-language: en-US,en;q=0.9,es-US;q=0.8,es;q=0.7,fr;q=0.6' \
+  -H 'cache-control: no-cache' \
+  -b '__Host-GCP_IAP_AUTH_TOKEN_56BC70D92F97769E=ASPJNyC-EAENchoTC5284H3UKyUaPK5cyp_nBvURyYmE-Hs4g5Tq8jpLVO27y_F096HPSMkTpe6iGHyNRCfGBQ8OtSH29CUscikJQDbJw6aCGXrNNtxY6uk_zj5trddHoLkZKdJz-xWrjCS8rewPXyIbibORrZ2mK2y6jWuGQjjW8NByjVjupJTCqJKDyujX8wz-9p8w4NXd3pBksk3xgUPRny_x4OEUZBZapMFI3hWBOd-31RMQFtJTiSfOMKOna5YvdV8R1_0-mSmPdjEqa7ndGdJowY-3tqI66wqRQgKlFPvdot7NYxUiY2z0yW2Au05CqRw4qwq8E6wB-3tTmksy4uo6WXkXPP9rRtWUbDbm49rq1jWDArlFr7wKl_9olY71gcN9Meo315Ja1n2NxRhPlrZTjF40EFTbBL-XJyyVlYI_GR3csmwyMDB6HQbRCpLnq_nop916fN99t_BZ5tWhOnjDq3bcIF-q0jcJ9UbszhTvOntiWJT3QpoxzNNo99LZ9A90ftQeLx7AcJfsTSGa6DolMca2NxCfiyjN4KjKnLSyCX_fGqTttYmDSFEhUDeQSUDWb7aJMVwhseORI1CvrF1Nadat6Djr4GXKIxz0fmCAnvoUmptgEd9SO8kxP56XS2cfo57LkGtYkqDGDfCEWkJEnYKcfZSoxC5aJhsE6R6xHBJzXiluAv7azrOlfmpT8XUIqfhQqBZ3CptQ3EFxrjAIFfQZ1F6XaACz2-89FTw33vhV-E03BqiRVEz_C7oc5I75Nn7sWmVHBw16pMgpnoceGGV3phf6j7gEq1aLKuLs6TVO4kM7wVUkybgt7flDBAPOuOS_ACaOKwgNN1cHxX6x980OnTWyQjYF83vSxA9BOuN8-WKimYLQj9Nh4onTqVOJThiZtqp-avBsliM_Wj2-F4wWYSltbfE0gy7aOiaAchDeBGBF0oAvYQTH7NqSYF7-mp0PO8dUjuNbhMkqpqJRMB9jVO2z1aFb2xNGR07ggARJ9DmDKwWh8CdyX_YH4P_bPWFNjUwJNQfiN8E8jqRT8qHdS1N8uLWtq2nTjcMIK2YAUI-p8-OLoJdK9LkwKzPH1BT18BdeQ7PAK7X7gV3rjLH7xXLjaxQvoDmXWP2rU8llcAsKVWFtWsANS7tdDeb7aD-WkBgfDD7fpoOPQ_INBgM9N3e68WXQHyTZx90dAGeyNkOwJ99DO5iOCnmsXglgWP01FeKIUCg8oC3YDvm5SbDNVUOR2X4LYKgWb_JCfUhs_4YMaDLj29T8Pe1VXf5AV0ME6_zged1BSswQQkw3gxqXMjsG_lknhmvABWVGU2xS7vGLoM1o8Yn5zPY_o2Kt22palGyUKgo8ri52NsKTDbNl0_jHtGN5db7vapGg6966yVIf2CrEAiS3-zQB2cllwj2MxrdedktfKArMDehAbQXnkBLF0mFSZNjJD6QT2F7mUo3vC8pfUvuUhlyNgtz4XeVf2pfhIXJxOlV0-bHykxcVI17QrvG2KG1HQrsiPEjQ8-DURgO4HMR7dPh4HZKgdMSgRzIJLBrWw15HR21r4KrM8DIYNvFAX-rdrvB3hilZiejKZF4T9SjxgHcWd4BC3dRo8OVGOMlROqZqOYugl5m9zQoWW_AuKIYn3q4qz_GYUMeLnWaMLLOG; GCP_IAP_UID=111302228216187155614' \
+  -H 'pragma: no-cache' \
+  -H 'priority: u=0, i' \
+  -H 'sec-ch-ua: "Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "macOS"' \
+  -H 'sec-fetch-dest: document' \
+  -H 'sec-fetch-mode: navigate' \
+  -H 'sec-fetch-site: none' \
+  -H 'sec-fetch-user: ?1' \
+  -H 'upgrade-insecure-requests: 1' \
+  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'

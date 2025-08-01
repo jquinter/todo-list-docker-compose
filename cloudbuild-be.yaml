@@ -61,14 +61,15 @@ steps:
       - '${_CLOUD_RUN_REGION}'
       - '--platform'
       - 'managed'
-      - '--allow-unauthenticated' # Allows public access. For private APIs, use --no-allow-unauthenticated and configure IAM.
+      # Secure the service by disallowing unauthenticated access. IAP will handle authentication.
+      - '--no-allow-unauthenticated'
       - '--service-account'
       - '${_SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com'
       # Add Cloud SQL connection. The connection name is the instance connection string.
       - '--add-cloudsql-instances=${_CLOUD_SQL_CONNECTION_NAME}'
       # Set environment variables for the database connection.
-      # The DB_HOST is set to the Unix socket path provided by the Cloud SQL proxy.
-      - '--set-env-vars=DB_USER=${_DB_USER},DB_NAME=${_DB_NAME},DB_HOST=/cloudsql/${_CLOUD_SQL_CONNECTION_NAME}'
+      # The DB_HOST is the Unix socket path. IAP_AUDIENCE is needed for token verification.
+      - '--set-env-vars=DB_USER=${_DB_USER},DB_NAME=${_DB_NAME},DB_HOST=/cloudsql/${_CLOUD_SQL_CONNECTION_NAME},IAP_AUDIENCE=${_IAP_AUDIENCE}'
       # Mount the database password from Secret Manager. This is the recommended practice.
       - '--update-secrets=DB_PASSWORD=${_DB_PASSWORD_SECRET}:latest'
     waitFor: ['Push Backend Image']
@@ -91,6 +92,8 @@ substitutions:
   _DB_NAME: 'your-db-name'
   # This is the name of the secret in Secret Manager that holds your DB password.
   _DB_PASSWORD_SECRET: 'todo-db-password'
+  # IMPORTANT: This audience value is passed to the backend for IAP JWT verification.
+  _IAP_AUDIENCE: '/projects/000000000000/apps/your-project-id'
   _SERVICE_ACCOUNT_NAME: 'cloud-build-custom-sa'
 
 timeout: 500s

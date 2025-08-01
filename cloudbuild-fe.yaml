@@ -23,10 +23,9 @@ steps:
     id: 'Build Frontend Image'
     args:
       - 'build'
-      - '--build-arg'
-      - 'VUE_APP_API_URL=${_VUE_APP_API_URL}'
-      - '--build-arg'
-      - 'NGINX_PORT=${_CLOUD_RUN_PORT}'
+      # The frontend now calls its own /api endpoint, which is proxied by its Express server.
+      - '--build-arg=VUE_APP_API_URL=/api'
+      # The port the new Node.js server will listen on inside the container.
       - '--tag'
       - 'gcr.io/$PROJECT_ID/${_FRONTEND_SERVICE_NAME}:${TAG_NAME}'
       - '--tag'
@@ -66,7 +65,8 @@ steps:
       - '${_CLOUD_RUN_PORT}'
       - '--platform'
       - 'managed'
-      - '--allow-unauthenticated'
+      - '--no-allow-unauthenticated'
+      - '--set-env-vars=BACKEND_URL=${_BACKEND_URL}'
       - '--service-account'
       - '${_SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com'
 
@@ -79,14 +79,11 @@ steps:
 
 # Define substitutions. You must replace the placeholder with your actual production URL.
 substitutions:
-  # IMPORTANT: You must replace this placeholder with the stable, public URL of your
-  # deployed backend service. You can get this URL after the first successful
-  # deployment of the backend, or by mapping a custom domain.
-  _VUE_APP_API_URL: 'https://todo-backend-service-xxxxxxxx-uc.a.run.app/api'
   _CLOUD_RUN_REGION: 'us-central1' # Default region, can be overridden
   _FRONTEND_SERVICE_NAME: 'service-name'
   _CLOUD_RUN_PORT: '8080' # Default port, can be overridden
   _SERVICE_ACCOUNT_NAME: 'cloud-build-custom-sa'
+  _BACKEND_URL: 'https://todo-backend-p4e5pamr7q-uc.a.run.app'
 
 logsBucket: 'gs://scotiabank-2025-scl-101-custom-build-logs' # Replace with your actual bucket name  
 #serviceAccount: 'projects/scotiabank-2025-scl-101-custom/serviceAccounts/cloud-build-custom-sa@scotiabank-2025-scl-101-custom.iam.gserviceaccount.com' # Replace with your SA

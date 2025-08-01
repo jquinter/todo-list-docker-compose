@@ -1,7 +1,16 @@
 <template>
   <div id="app_container" class="container mx-auto p-4 bg-gray-100 min-h-screen flex flex-col items-center justify-center">
     <div class="bg-white shadow-xl rounded-lg p-8 w-full max-w-md">
-      <h1 class="text-4xl font-extrabold mb-8 text-center text-green-500">La TREMENDA lista</h1>
+      <!-- User Header -->
+      <div v-if="user.email" class="text-right text-sm text-gray-600 mb-4">
+        <span>Welcome, {{ user.email }}</span>
+        <a href="/.gcp/api/auth/logout" class="ml-2 text-blue-500 hover:underline">[Logout]</a>
+      </div>
+      <div v-else class="text-right text-sm text-gray-600 mb-4">
+        <span class="italic">Loading user...</span>
+      </div>
+
+      <h1 class="text-4xl font-extrabold mb-8 text-center text-red-500">Organizador personal</h1>
 
       <!-- Input and Add Button Section -->
       <div class="flex mb-6 space-x-2">
@@ -51,27 +60,54 @@ export default {
     return {
       todos: [],
       newTodoText: '',
-      // FIXED: Use process.env.VUE_APP_API_URL for Vue CLI projects
       backendUrl: process.env.VUE_APP_API_URL || '/api',
-      // Simulate a logged-in user. In a real app, this would come from an auth service.
-      currentUser: {
-        id: 1, // Corresponds to 'jdoe' in our init.sql
+      // This will be populated with the logged-in user's info from IAP
+      user: {
+        email: null,
       },
     };
   },
   // Lifecycle hook: called after the instance is created.
   // Perfect for fetching initial data.
-  created() {
-    this.fetchTodos();
+  async created() {
+    await this.fetchUser();
+    if (this.user.email) {
+      this.fetchTodos();
+    }
   },
   methods: {
+    /**
+     * Creates a headers object with the simulated user email for local development.
+     * In a real IAP environment, this header is added by the proxy.
+     */
+    getApiHeaders() {
+      const headers = {};
+      // For local development, we simulate the IAP header using an environment variable.
+      if (process.env.NODE_ENV === 'development' && process.env.VUE_APP_DEV_USER_EMAIL) {
+        headers['x-user-email'] = process.env.VUE_APP_DEV_USER_EMAIL;
+      }
+      return headers;
+    },
+    /**
+     * Fetches the logged-in user's profile info from the backend.
+     * The backend gets this information from the IAP headers.
+     */
+    async fetchUser() {
+      try {
+        const response = await fetch(`${this.backendUrl}/user/me`, { headers: this.getApiHeaders() });
+        if (!response.ok) throw new Error('Could not fetch user profile.');
+        this.user = await response.json();
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    },
     /**
      * Fetches all todo items from the backend API.
      */
     async fetchTodos() {
       try {
-        // Fetch todos for the current user
-        const response = await fetch(`${this.backendUrl}/users/${this.currentUser.id}/todos`);
+        // The backend knows the user from the IAP header, so no user ID is needed in the URL.
+        const response = await fetch(`${this.backendUrl}/todos`, { headers: this.getApiHeaders() });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -98,10 +134,11 @@ export default {
       };
 
       try {
-        const response = await fetch(`${this.backendUrl}/users/${this.currentUser.id}/todos`, {
+        const response = await fetch(`${this.backendUrl}/todos`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...this.getApiHeaders(),
           },
           body: JSON.stringify(newTodo),
         });
@@ -137,10 +174,11 @@ export default {
       todoToUpdate.completed = !todoToUpdate.completed;
 
       try {
-        const response = await fetch(`${this.backendUrl}/users/${this.currentUser.id}/todos/${id}`, {
+        const response = await fetch(`${this.backendUrl}/todos/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+            ...this.getApiHeaders(),
           },
           body: JSON.stringify({ completed: todoToUpdate.completed }), // Only send the 'completed' status
         });
@@ -165,8 +203,9 @@ export default {
      */
     async deleteTodo(id) {
       try {
-        const response = await fetch(`${this.backendUrl}/users/${this.currentUser.id}/todos/${id}`, {
+        const response = await fetch(`${this.backendUrl}/todos/${id}`, {
           method: 'DELETE',
+          headers: this.getApiHeaders(),
         });
 
         if (!response.ok) {

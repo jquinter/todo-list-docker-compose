@@ -2,8 +2,10 @@ import { mount } from '@vue/test-utils';
 import TodoItem from '@/components/TodoItem.vue';
 
 describe('TodoItem.vue', () => {
+  const now = new Date().toISOString();
+
   it('renders todo title correctly', () => {
-    const todo = { id: 1, title: 'Test Todo', completed: false };
+    const todo = { id: 1, title: 'Test Todo', completed: false, created_at: now };
     const wrapper = mount(TodoItem, {
       props: { todo },
     });
@@ -11,7 +13,7 @@ describe('TodoItem.vue', () => {
   });
 
   it('applies line-through style when todo is completed', async () => {
-    const todo = { id: 1, title: 'Completed Todo', completed: true };
+    const todo = { id: 1, title: 'Completed Todo', completed: true, created_at: now };
     const wrapper = mount(TodoItem, {
       props: { todo },
     });
@@ -22,7 +24,7 @@ describe('TodoItem.vue', () => {
   });
 
   it('emits "toggle-complete" event when checkbox is clicked', async () => {
-    const todo = { id: 1, title: 'Toggle Me', completed: false };
+    const todo = { id: 1, title: 'Toggle Me', completed: false, created_at: now };
     const wrapper = mount(TodoItem, {
       props: { todo },
     });
@@ -32,7 +34,7 @@ describe('TodoItem.vue', () => {
   });
 
   it('emits "delete-todo" event when delete button is clicked', async () => {
-    const todo = { id: 1, title: 'Delete Me', completed: false };
+    const todo = { id: 1, title: 'Delete Me', completed: false, created_at: now };
     const wrapper = mount(TodoItem, {
       props: { todo },
     });
@@ -42,7 +44,7 @@ describe('TodoItem.vue', () => {
   });
 
   it('does NOT apply line-through style when todo is uncompleted', () => {
-    const todo = { id: 2, title: 'Uncompleted Todo', completed: false };
+    const todo = { id: 2, title: 'Uncompleted Todo', completed: false, created_at: now };
     const wrapper = mount(TodoItem, {
       props: { todo },
     });
@@ -50,7 +52,7 @@ describe('TodoItem.vue', () => {
   });
 
   it('checkbox is checked when todo is completed', () => {
-    const todo = { id: 3, title: 'Checked Todo', completed: true };
+    const todo = { id: 3, title: 'Checked Todo', completed: true, created_at: now };
     const wrapper = mount(TodoItem, {
       props: { todo },
     });
@@ -58,7 +60,7 @@ describe('TodoItem.vue', () => {
   });
 
   it('checkbox is unchecked when todo is uncompleted', () => {
-    const todo = { id: 4, title: 'Unchecked Todo', completed: false };
+    const todo = { id: 4, title: 'Unchecked Todo', completed: false, created_at: now };
     const wrapper = mount(TodoItem, {
       props: { todo },
     });
@@ -66,30 +68,30 @@ describe('TodoItem.vue', () => {
   });
 
   it('updates title when todo prop changes', async () => {
-    const todo = { id: 5, title: 'Original Title', completed: false };
+    const todo = { id: 5, title: 'Original Title', completed: false, created_at: now };
     const wrapper = mount(TodoItem, {
       props: { todo },
     });
     expect(wrapper.find('span').text()).toBe('Original Title');
 
-    await wrapper.setProps({ todo: { ...todo, title: 'Updated Title' } });
+    await wrapper.setProps({ todo: { ...todo, title: 'Updated Title' }});
     expect(wrapper.find('span').text()).toBe('Updated Title');
   });
 
   // If you have specific ARIA attributes for accessibility:
-  it('qwas correct aria-checked attribute for checkbox', async () => {
-    const todo = { id: 6, title: 'ARIA Test', completed: false };
+  it('has correct aria-checked attribute for checkbox', async () => {
+    const todo = { id: 6, title: 'ARIA Test', completed: false, created_at: now };
     const wrapper = mount(TodoItem, {
       props: { todo },
     });
     expect(wrapper.find('input[type="checkbox"]').attributes('aria-checked')).toBe('false');
 
-    await wrapper.setProps({ todo: { ...todo, completed: true } });
+    await wrapper.setProps({ todo: { ...todo, completed: true }});
     expect(wrapper.find('input[type="checkbox"]').attributes('aria-checked')).toBe('true');
   });
 
   it('renders gracefully with an empty todo title', () => {
-    const todo = { id: 7, title: '', completed: false };
+    const todo = { id: 7, title: '', completed: false, created_at: now };
     const wrapper = mount(TodoItem, {
       props: { todo },
     });

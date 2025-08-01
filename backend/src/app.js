@@ -1,7 +1,8 @@
 // backend/src/app.js
 const express = require('express');
 const cors = require('cors');
-const todoRoutes = require('./routes/todos');
+const { router: todoRoutes } = require('./routes/todos'); // Import router from todos
+const { router: userRoutes } = require('./routes/users'); // Import router from users
 const db = require('./db'); // Import the database connection module
 
 const app = express();
@@ -15,15 +16,24 @@ app.use(cors());
 app.use(express.json());
 
 // Routes setup
-// Mount the todo routes under the '/todos' path.
-// All requests to /todos, /todos/:id, etc., will be handled by todoRoutes.
-app.use('/todos', todoRoutes);
+// Mount all routes under the /api prefix for better namespacing.
+app.use('/api/user', userRoutes);
+app.use('/api/todos', todoRoutes);
 
 // Basic health check endpoint
 // This endpoint can be used by Docker Compose's healthcheck or external monitoring
 // to verify that the backend application is running and responsive.
-app.get('/health', (req, res) => {
-  res.status(200).send('Backend is healthy');
+app.get('/api/health', async (req, res) => {
+  try {
+    // A true health check should verify dependencies. A lightweight query
+    // to the database confirms connectivity.
+    await db.query('SELECT 1');
+    res.status(200).json({ status: 'ok', database: 'connected' });
+  } catch (error) {
+    // If the database query fails, the service is not healthy.
+    console.error('Health check failed:', error);
+    res.status(503).json({ status: 'error', database: 'disconnected' });
+  }
 });
 
 // Function to connect to the database and start the server
@@ -31,7 +41,7 @@ async function startServer() {
   try {
     // Attempt to connect to the database. The server will not start if this fails.
     await db.connectDb();
-    // Start the Express server and listen on the specified port.
+    // Start the Express server and listen on the specified port
     app.listen(port, () => {
       console.log(`Backend server listening at http://localhost:${port}`);
     });
